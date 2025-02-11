@@ -41,7 +41,7 @@ class CaloriasController extends GetxController {
     int? existingId = await caloriasService.checkIfCaloriasExists(date, usuarioId);
 
     if (existingId != null) {
-      // Se já existir, atualizar diretamente no banco
+
       caloriasObj = Calorias(
         id: existingId, // Atribui o id existente ao objeto
         usuarioId: caloriasObj.usuarioId,
@@ -103,8 +103,8 @@ class CaloriasController extends GetxController {
       // Filtra as calorias por usuário
       final List<Map<String, dynamic>> maps = await dbInstance.query(
         'calorias',
-        where: 'usuario_id = ?', // Filtra pelo ID do usuário
-        whereArgs: [usuarioId], // Argumento para o filtro
+        where: 'usuario_id = ?',
+        whereArgs: [usuarioId], 
       );
 
       // Zera o vetor e carrega novamente os dados
