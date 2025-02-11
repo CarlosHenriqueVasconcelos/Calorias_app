@@ -5,7 +5,7 @@ import '../models/usuario.dart';
 class AuthController extends GetxController {
   var emailError = ''.obs;
   var passwordError = ''.obs;
-  var user = Rx<Usuario?>(null); // Agora o tipo é 'Usuario'
+  var user = Rx<Usuario?>(null); 
 
   final AuthService _authService = AuthService();  // Instância do AuthService
 
@@ -36,10 +36,10 @@ class AuthController extends GetxController {
           // Salvar o usuário logado no estado
           update(); // Atualiza o estado do GetX
         } else {
-          passwordError.value = 'Senha incorreta.'; // A senha está errada
+          passwordError.value = 'Senha incorreta.'; 
         }
       } else {
-        emailError.value = 'Usuário não encontrado.'; // Nome de usuário não existe
+        emailError.value = 'Usuário não encontrado.'; 
       }
     }
   }
@@ -69,8 +69,8 @@ class AuthController extends GetxController {
         passwordError.value = '';
         Get.snackbar('Sucesso', 'Usuário cadastrado com sucesso!');  // Feedback de sucesso
 
-        // Após o cadastro, podemos redirecionar ou atualizar o estado
-        // Get.offAllNamed('/'); // Exemplo de navegação para a tela inicial ou de login
+        
+        
 
       } catch (e) {
         // Tratamento de erro ao tentar registrar o usuário
