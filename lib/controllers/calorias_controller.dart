@@ -17,51 +17,60 @@ class CaloriasController extends GetxController {
 
   // Método para adicionar calorias
   Future<void> addCalorias({
-    required DateTime date,
-    required int calorias,
-    required int usuarioId, // Recebe o ID do usuário
-    required BuildContext context,
-  }) async {
-    try {
-      // Obtém a latitude e longitude da localização
-      String location = locationMessage.value;
-      double? latitude = location.isNotEmpty ? double.tryParse(location.split(',')[0].split(':')[1].trim()) : null;
-      double? longitude = location.isNotEmpty ? double.tryParse(location.split(',')[1].split(':')[1].trim()) : null;
+  required DateTime date,
+  required int calorias,
+  required int usuarioId, // Recebe o ID do usuário
+  required BuildContext context,
+}) async {
+  try {
+    // Obtém a latitude e longitude da localização
+    String location = locationMessage.value;
+    double? latitude = location.isNotEmpty ? double.tryParse(location.split(',')[0].split(':')[1].trim()) : null;
+    double? longitude = location.isNotEmpty ? double.tryParse(location.split(',')[1].split(':')[1].trim()) : null;
 
-      // Cria o objeto Calorias
-      Calorias caloriasObj = Calorias(
-        diaDoMes: date,
-        caloriasConsumidas: calorias,
-        latitude: latitude,
-        longitude: longitude,
-        usuarioId: usuarioId, // Adiciona o ID do usuário ao objeto
+    // Cria o objeto Calorias
+    Calorias caloriasObj = Calorias(
+      diaDoMes: date,
+      caloriasConsumidas: calorias,
+      latitude: latitude,
+      longitude: longitude,
+      usuarioId: usuarioId, // Adiciona o ID do usuário ao objeto
+    );
+
+    // Verificar se já existe uma entrada para a mesma data e usuário
+    int? existingId = await caloriasService.checkIfCaloriasExists(date, usuarioId);
+
+    if (existingId != null) {
+      // Se já existir, atualizar diretamente no banco
+      caloriasObj = Calorias(
+        id: existingId, // Atribui o id existente ao objeto
+        usuarioId: caloriasObj.usuarioId,
+        diaDoMes: caloriasObj.diaDoMes,
+        caloriasConsumidas: caloriasObj.caloriasConsumidas,
+        latitude: caloriasObj.latitude,
+        longitude: caloriasObj.longitude,
       );
-
-      // Verificar se já existe uma entrada para a mesma data e usuário
-      bool exists = await caloriasService.checkIfCaloriasExists(date, usuarioId);
-
-      if (exists) {
-        // Se já existir, atualize as calorias
-        await caloriasService.updateCalorias(caloriasObj);
-        successMessage.value = 'Calorias atualizadas com sucesso!';
-      } else {
-        // Caso contrário, adicione uma nova entrada
-        await caloriasService.adicionarCalorias(caloriasObj);
-        successMessage.value = 'Calorias adicionadas com sucesso!';
-      }
-
-      caloriasError.value = ''; // Limpa erros
-
-      // Recarregar os dados de calorias após a operação
-      await getCalorias(usuarioId);
-
-      // Exibe o AlertDialog de sucesso
-      _showSuccessDialog(context);
-
-    } catch (e) {
-      caloriasError.value = 'Erro ao adicionar calorias: $e';
+      await caloriasService.updateCalorias(caloriasObj);
+      successMessage.value = 'Calorias atualizadas com sucesso!';
+    } else {
+      // Caso contrário, adicione uma nova entrada
+      await caloriasService.adicionarCalorias(caloriasObj);
+      successMessage.value = 'Calorias adicionadas com sucesso!';
     }
+
+    caloriasError.value = ''; // Limpa erros
+
+    // Recarregar os dados de calorias após a operação
+    await getCalorias(usuarioId);
+
+    // Exibe o AlertDialog de sucesso
+    _showSuccessDialog(context);
+
+  } catch (e) {
+    caloriasError.value = 'Erro ao adicionar calorias: $e';
   }
+}
+
 
   // Função para exibir o AlertDialog de sucesso
   void _showSuccessDialog(BuildContext context) {

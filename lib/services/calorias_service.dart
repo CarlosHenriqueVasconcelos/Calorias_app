@@ -6,9 +6,9 @@ class CaloriasService {
   Future<void> adicionarCalorias(Calorias calorias) async {
     try {
       final dbInstance = await db.DB.instance.database;
-      final exists = await checkIfCaloriasExists(calorias.diaDoMes, calorias.usuarioId);
+      final existingId = await checkIfCaloriasExists(calorias.diaDoMes, calorias.usuarioId);
 
-      if (exists) {
+      if (existingId != null) {
         // Se a data e o usuário já existem, chama a função de atualização
         await updateCalorias(calorias);
       } else {
@@ -21,35 +21,40 @@ class CaloriasService {
   }
 
   // Função para atualizar calorias no banco de dados
-  Future<void> updateCalorias(Calorias calorias) async {
-    try {
-      final dbInstance = await db.DB.instance.database;
-      await dbInstance.update(
-        'calorias',
-        calorias.toMap(),
-        where: 'dia_do_mes = ? AND usuario_id = ?', // Atualiza para o usuário e data específicos
-        whereArgs: [calorias.diaDoMes.millisecondsSinceEpoch, calorias.usuarioId],
-      );
-    } catch (e) {
-      throw Exception('Erro ao atualizar calorias: $e');
-    }
-  }
+Future<void> updateCalorias(Calorias caloriasObj) async {
+
+  final dbInstance = await db.DB.instance.database;
+
+  // Executando o UPDATE diretamente no banco
+  await dbInstance.update(
+    'calorias', // Nome da tabela
+    caloriasObj.toMap(), // Mapeia o objeto para o formato Map
+    where: 'id = ?', // Condição para encontrar o registro correto
+    whereArgs: [caloriasObj.id], // Passa o id do objeto
+  );
+}
+
 
   // Função para verificar se já existe uma entrada para a mesma data e usuário
-  Future<bool> checkIfCaloriasExists(DateTime date, int usuarioId) async {
-    try {
-      final dbInstance = await db.DB.instance.database;
-      final List<Map<String, dynamic>> maps = await dbInstance.query(
-        'calorias',
-        where: 'dia_do_mes = ? AND usuario_id = ?', // Verifica a data e o ID do usuário
-        whereArgs: [date.millisecondsSinceEpoch, usuarioId],
-      );
+  Future<int?> checkIfCaloriasExists(DateTime date, int usuarioId) async {
+  final dbInstance = await db.DB.instance.database;
 
-      return maps.isNotEmpty; // Retorna true se já existir, caso contrário false
-    } catch (e) {
-      throw Exception('Erro ao verificar calorias: $e');
-    }
+  final List<Map<String, dynamic>> result = await dbInstance.query(
+    'calorias',
+    where: 'dia_do_mes = ? AND usuario_id = ?',
+    whereArgs: [
+      date.millisecondsSinceEpoch,
+      usuarioId,
+    ],
+  );
+
+  // Retorna o ID se existir, ou null se não existir
+  if (result.isNotEmpty) {
+    return result.first['id'];  // Retorna o ID do primeiro registro encontrado
   }
+
+  return null;  // Retorna null se não encontrar nenhum registro
+}
 
   // Função para obter todas as calorias no banco de dados para um usuário específico
   Future<List<Calorias>> getAllCalorias(int usuarioId) async {
